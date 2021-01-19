@@ -5,33 +5,62 @@ import java.util.*;
 import static java.lang.System.exit;
 
 public class State {
+    static private int MAX_SIZE = 5;
 
-    private int[][] values = new int[3][3];
+    private int[][] values;
     private Direction last_move = Direction.NONE;
+
+    private int row_size;
+    private int col_size;
 
     private enum Direction {
         NONE, RIGHT, LEFT, UP, DOWN
     }
 
-    State(int[] arr) {
-        for (int row = 0; row < 3; row++)
-            for (int col = 0; col < 3; col++)
-                values[row][col] = arr[3 * row + col];
+    State(int[] arr, int n_of_rows, int n_of_cols) {
+        row_size = n_of_rows;
+        col_size = n_of_cols;
+        for (int row = 0; row < row_size; row++)
+            for (int col = 0; col < col_size; col++)
+                values[row][col] = arr[col_size * row + col];
     }
 
-    State(int[][] arr) {
+    State(int[][] arr, int n_of_rows, int n_of_cols) {
+        row_size = n_of_rows;
+        col_size = n_of_cols;
         setValues(arr);
     }
 
     // copy constructor
     State(State other) {
+        row_size = other.row_size;
+        col_size = other.col_size;
         setValues(other.values);
         last_move = other.last_move;
     }
 
+    public int getRowSize() {
+        return row_size;
+    }
+
+    public int getColSize() {
+        return col_size;
+    }
+
+    public void setRowSize(int size) {
+        this.row_size = size;
+    }
+
+    public void setColSize(int size) {
+        this.col_size = size;
+    }
+
     private void setValues(int arr[][]) {
-        for (int row = 0; row < 3; row++)
-            for (int col = 0; col < 3; col++)
+        if (values == null)
+            values = new int[row_size][col_size];
+
+        for (int row = 0; row < row_size; row++)
+            for (int col = 0; col < col_size; col++)
                 values[row][col] = arr[row][col];
     }
 
@@ -82,7 +111,7 @@ public class State {
         int[] empty_pos = valueCoordinates(0);
 
         // if empty space is not rightmost, allow moving left
-        if (empty_pos[1] != 2)
+        if (empty_pos[1] != col_size - 1)
             dirs.add(Direction.LEFT);
 
         // if empty space is not leftmost, allow moving right
@@ -90,7 +119,7 @@ public class State {
             dirs.add(Direction.RIGHT);
 
         // if empty space is not down, allow moving upwards
-        if (empty_pos[0] != 2)
+        if (empty_pos[0] != row_size - 1)
             dirs.add(Direction.UP);
 
         // if empty space is not up, allow moving downwards
@@ -114,7 +143,7 @@ public class State {
         Set<State> possible_states = new HashSet<State>();
 
         for (Direction dir : possibleMoveDirections()) {
-            State new_state = new State(values);
+            State new_state = new State(values, row_size, col_size);
             new_state.move(dir);
             // Set<State>.contains calls "equals" method of this class
             if (!visited_states.contains(new_state))
@@ -129,8 +158,8 @@ public class State {
         //      - calculating manhattan distance (getting value position within the goal state)
         //      - determining possible moves (getting empty space position)
 
-        for (int row = 0; row < 3; row++)
-            for (int col = 0; col < 3; col++)
+        for (int row = 0; row < row_size; row++)
+            for (int col = 0; col < col_size; col++)
                 if (values[row][col] == value_to_find)
                     return new int[] {row, col};
         return null;
@@ -141,11 +170,11 @@ public class State {
         List<Integer> neighbor_values = new ArrayList<>();
         if (row != 0)
             neighbor_values.add(values[row - 1][col]);
-        if (row != 2)
+        if (row != row_size - 1)
             neighbor_values.add(values[row + 1][col]);
         if (col != 0)
             neighbor_values.add(values[row][col - 1]);
-        if (col != 2)
+        if (col != col_size - 1)
             neighbor_values.add(values[row][col + 1]);
         return neighbor_values;
     }
@@ -171,12 +200,13 @@ public class State {
     @Override
     public String toString() {
         String s = "";
-        for (int i = 0; i < 9; i++) {
-            String value = Integer.toString(values[i / 3][i % 3]);
-            // empty space if 0
-            // add spaces between values (but not after thanks to "i==8" check)
-            s += (value.equals("0") ? " " : value) + (i == 8 ? "" : " ");
-        }
+//        int all_values_size = row_size*col_size;
+//        for (int i = 0; i < all_values_size; i++) {
+//            String value = Integer.toString(values[i / row_size][i % col_size]);
+//            // empty space if 0
+//            // add spaces between values (but not after thanks to "i==8" check)
+//            s += (value.equals("0") ? " " : value) + (i == all_values_size-1 ? "" : " ");
+//        }
         return s;
     }
 

@@ -28,8 +28,8 @@ public class Node implements Comparable {
         int[][] goal_values = goal_state.getValues();
         int[][] values = state.getValues();
 
-        for (int row = 0; row < 3; row++) {
-            for (int col = 0; col < 3; col++) {
+        for (int row = 0; row < state.getRowSize(); row++) {
+            for (int col = 0; col < state.getColSize(); col++) {
 
                 if (types.contains(MANHATTAN_DISTANCE)) {
                     // Manhattan distance is how many moves a value is from reaching
@@ -85,7 +85,7 @@ public class Node implements Comparable {
                     //                 and the puzzle can be solved in few steps (0,8,6,5 have to be
                     //                 rotated 180 degrees).
 
-                    if (state.isDirectlyReversed(col, row, goal_state))
+                    if (state.isDirectlyReversed(row, col, goal_state))
                         heuristic += 1;
                 }
             }

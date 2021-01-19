@@ -70,8 +70,18 @@ public class Program {
                 {7,8,0}
         };
 
+        int[][] initial_state_2 = new int[][]{
+                {5,4,3},
+                {2,1,0}
+        };
+
+        int[][] goal_state_2 = new int[][]{
+                {1,2,3},
+                {4,5,0}
+        };
+
         // goal_state may be changed later using "puzzle.setGoalState" method
-        EightPuzzle puzzle = new EightPuzzle(goal_state);
+        EightPuzzle puzzle = new EightPuzzle(goal_state_2);
 
         int option = -1;
         while ((option = getMenuOption(menu_main, menu_main_limit)) != 0) {
@@ -83,7 +93,7 @@ public class Program {
                     puzzle.setHeuristics(new ArrayList<>());
 
                     // solve method is overloaded, so PrintWriter also could be supplied (instead of a file name)
-                    puzzle.solve(initial_state, "outputUniCost.txt");
+                    puzzle.solve(initial_state_2, "outputUniCost.txt");
                     break;
 
                 // If A* is selected
@@ -111,7 +121,7 @@ public class Program {
                         }};
                     }
                     puzzle.setHeuristics(heuristics);
-                    puzzle.solve(initial_state, "outputAstar.txt");
+                    puzzle.solve(initial_state_2, "outputAstar.txt");
                     break;
             }
         }

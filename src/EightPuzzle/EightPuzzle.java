@@ -25,9 +25,7 @@ public class EightPuzzle {
     // It is equivalent to "visited" list from this video: https://www.youtube.com/watch?v=dRMvK76xQJI
     Set<State> visited_states = new HashSet<>();
 
-    public EightPuzzle(int[][] goal_state_values) {
-        setGoalState(goal_state_values);
-    }
+    public EightPuzzle(int[][] goal_state_values) { setGoalState(goal_state_values); }
 
     public void setHeuristics(List<Heuristic> heuristics_) {
         // The goal of heuristics is to prioritize expansion
@@ -61,7 +59,7 @@ public class EightPuzzle {
         nodes_expanded = 0;
 
         // create first node with initial state
-        Node node = new Node(null, 0, new State(initial_state_));
+        Node node = new Node(null, 0, new State(initial_state_, 2,3));
 
         // avoid visiting initial node
         visited_states.add(node.state);
@@ -111,10 +109,10 @@ public class EightPuzzle {
 
         // "Set<State>visited_states" is supplied to prevent "going around in circles"
         // Nodes with states already visited are not created
-        for (State new_state : node.state.possibleNewStates(visited_states)) {
+        node.state.possibleNewStates(visited_states).forEach(new_state-> {
             new_nodes.add(new Node(node, node.depth + 1, new_state));
             visited_states.add(new_state);
-        }
+        });
 
         for (Node n : new_nodes)
             n.setHeuristics(goal_state, heuristics);
@@ -126,6 +124,6 @@ public class EightPuzzle {
     public void setGoalState(int[][] goal_state_values) {
         // It allows the user/developer to change
         // goal state after creation of EightPuzzle class.
-        goal_state = new State(goal_state_values);
+        goal_state = new State(goal_state_values, 2,3);
     }
 }
