@@ -10,6 +10,12 @@ public class State {
     private int[][] values;
     private Direction last_move = Direction.NONE;
 
+    /*  The challenge week instruction specified that the final output should
+        include values of puzzle fields that moved (as opposed to the direction
+        of moves used in AI assignment). That's why this variable is added
+        to State class. */
+    private int value_that_moved;
+
     private int row_size;
     private int col_size;
 
@@ -17,17 +23,17 @@ public class State {
         NONE, RIGHT, LEFT, UP, DOWN
     }
 
-    State(int[] arr, int n_of_rows, int n_of_cols) {
+    State(int[] arr, int n_of_rows) {
         row_size = n_of_rows;
-        col_size = n_of_cols;
+        col_size = arr.length/n_of_rows;
         for (int row = 0; row < row_size; row++)
             for (int col = 0; col < col_size; col++)
                 values[row][col] = arr[col_size * row + col];
     }
 
-    State(int[][] arr, int n_of_rows, int n_of_cols) {
-        row_size = n_of_rows;
-        col_size = n_of_cols;
+    State(int[][] arr) {
+        row_size = arr.length;
+        col_size = arr[0].length;
         setValues(arr);
     }
 
@@ -37,6 +43,10 @@ public class State {
         col_size = other.col_size;
         setValues(other.values);
         last_move = other.last_move;
+    }
+
+    public int getValueThatMoved() {
+        return value_that_moved;
     }
 
     public int getRowSize() {
@@ -89,7 +99,8 @@ public class State {
                 exit(-1);
         }
         // put moved value into empty space
-        values[empty_space_row][empty_space_col] = values[empty_space_row - v_offset][empty_space_col - h_offset];
+        value_that_moved = values[empty_space_row - v_offset][empty_space_col - h_offset];
+        values[empty_space_row][empty_space_col] = value_that_moved;
 
         // put empty space at previous position of value
         values[empty_space_row - v_offset][empty_space_col - h_offset] = 0;
@@ -143,7 +154,7 @@ public class State {
         Set<State> possible_states = new HashSet<State>();
 
         for (Direction dir : possibleMoveDirections()) {
-            State new_state = new State(values, row_size, col_size);
+            State new_state = new State(values);
             new_state.move(dir);
             // Set<State>.contains calls "equals" method of this class
             if (!visited_states.contains(new_state))

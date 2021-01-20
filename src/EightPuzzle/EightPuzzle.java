@@ -25,7 +25,8 @@ public class EightPuzzle {
     // It is equivalent to "visited" list from this video: https://www.youtube.com/watch?v=dRMvK76xQJI
     Set<State> visited_states = new HashSet<>();
 
-    public EightPuzzle(int[][] goal_state_values) { setGoalState(goal_state_values); }
+    public EightPuzzle() {
+    }
 
     public void setHeuristics(List<Heuristic> heuristics_) {
         // The goal of heuristics is to prioritize expansion
@@ -38,13 +39,9 @@ public class EightPuzzle {
         heuristics = heuristics_;
     }
 
-    public boolean solve(int[][] initial_state_, String file_name) throws FileNotFoundException {
-        PrintWriter output = new PrintWriter(new File(file_name));
-        solve(initial_state_, output);
-        output.close();
-        return true;
-    }
-    public boolean solve(int[][] initial_state_, PrintWriter output) {
+    public boolean solve(int[][] initial_state_) {
+        setGoalStateFromInitialState(initial_state_);
+
         long start_time = System.currentTimeMillis();
 
         // nodes is ordered starting with the most likely to result in solution (after expanding them)
@@ -59,7 +56,7 @@ public class EightPuzzle {
         nodes_expanded = 0;
 
         // create first node with initial state
-        Node node = new Node(null, 0, new State(initial_state_, 2,3));
+        Node node = new Node(null, 0, new State(initial_state_));
 
         // avoid visiting initial node
         visited_states.add(node.state);
@@ -79,21 +76,26 @@ public class EightPuzzle {
         // backtrack from the node that was found having goal state
         // all the way back to the first node (having initial state)
         while (node.parent != null) {
-            path.add(0, node.state.toString());
+            //path.add(0, node.state.toString());
+            path.add(0, Integer.toString(node.state.getValueThatMoved()));
             node = node.parent;
         }
 
         last_solution_path_size = path.size();
 
         System.out.printf("Solution took %dms.\n", System.currentTimeMillis() - start_time);
+        String completion_time = String.format("%dms", System.currentTimeMillis() - start_time);
+        String number_of_moves =  String.format("%d", path.size());
+        String nodes_expanded_str =  String.format("%d", nodes_expanded);
 
-        for (String state_str : path)
-            output.println(state_str);
+        /*
+            for (String state_str : path)
+                output.println(state_str);
 
-        output.printf("%d Moves\n", path.size());
-        output.printf("%d Nodes expanded\n", nodes_expanded);
-        output.printf("%d Nodes unexpanded\n", nodes.size());
-
+            output.printf("%d Moves\n", path.size());
+            output.printf("%d Nodes expanded\n", nodes_expanded);
+            output.printf("%d Nodes unexpanded\n", nodes.size());
+        */
         System.out.printf("%d Moves\n", path.size());
         System.out.printf("%d Nodes expanded\n", nodes_expanded);
         System.out.printf("%d Nodes unexpanded\n", nodes.size());
@@ -121,9 +123,20 @@ public class EightPuzzle {
         return new_nodes;
     }
 
-    public void setGoalState(int[][] goal_state_values) {
+    public void setGoalStateFromInitialState(int[][] initial_state_values) {
         // It allows the user/developer to change
         // goal state after creation of EightPuzzle class.
-        goal_state = new State(goal_state_values, 2,3);
+        int[][] goal_state_values = new int[initial_state_values.length][initial_state_values[0].length];
+
+        int num = 1;
+        for (int i = 0; i < initial_state_values.length; i++) {
+            for (int j = 0; j < initial_state_values[0].length; j++) {
+                goal_state_values[i][j] = num;
+                num += 1;
+            }
+        }
+
+        goal_state_values[initial_state_values.length - 1][initial_state_values[0].length - 1] = 0;
+        goal_state = new State(goal_state_values);
     }
 }

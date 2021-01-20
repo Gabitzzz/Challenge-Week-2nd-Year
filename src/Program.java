@@ -1,129 +1,131 @@
 import EightPuzzle.EightPuzzle;
 
+import javax.swing.*;
+import javax.swing.Timer;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
+import java.util.List;
 
 import static EightPuzzle.EightPuzzle.Heuristic;
 import static EightPuzzle.EightPuzzle.Heuristic.*;
 import static java.lang.System.exit;
 
-public class Program {
-    private final static boolean SELECTABLE_HEURISTICS = false;
+public class Program extends JFrame {
+    // https://www3.ntu.edu.sg/home/ehchua/programming/java/J4b_CustomGraphics.html
+    JPanel panel;
+    JComboBox comboBox;
+    JButton button;
+    GraphicsPanel graphics_panel;
 
-    private final static String menu_main =
-            "Options:\n" +
-                    "0. Exit\n" +
-                    "1. Uniform cost search\n" +
-                    "2. A* search\n";
+    public static void main(String[] args) throws FileNotFoundException {
+        new Program();
+    }
 
-    private final static int menu_main_limit = 2;
+    Program() {
+        panel = new JPanel(new FlowLayout());
+        comboBox = new JComboBox();
+        button = new JButton("Start");
+        graphics_panel = new GraphicsPanel();
 
-    /*  I abandoned this part after asking the tutor about multiple optional selectable heuristics.
-        I decided to use 7th option as default (manhattan dist mismatch count and direct reversal penalty)
-        Because it produces the best result for this particular example.
-        However, I kept the results of all other combinations and included them in the report (in a table).
-*/
-    private final static String menu_astar =
-            "Heuristics:\n" +
-                    "1. Manhattan distance\n" +
-                    "2. Mismatch count\n" +
-                    "3. Direct reversal penalty\n" +
-                    "4. 1 and 2\n" +
-                    "5. 1 and 3\n" +
-                    "6. 2 and 3\n" +
-                    "7. All 3\n";
+        panel.add(comboBox);
+        panel.add(button);
 
-    private final static int menu_astar_limit = 7;
+        //setContentPane(panel);
 
-    private static int getMenuOption(String menu, int limit) {
-        System.out.println("\n" + menu);
-        Scanner scanner = new Scanner(System.in);
-        while (true) {
-            System.out.print("Select option > ");
-            try {
-                int value = scanner.nextInt();
-                if (value < 0 || value > limit) {
-                    System.out.print("\nOption does not exist. ");
-                    continue;
-                }
-                System.out.println();
-                return value;
-            } catch (InputMismatchException e) {
-                System.out.print("\nInvalid input. ");
-                // ignore invalid input
-                scanner.next();
+        // Add both panels to this JFrame's content-pane
+        Container cp = getContentPane();
+        cp.setLayout(new BorderLayout());
+        cp.add(panel, BorderLayout.CENTER);
+        cp.add(graphics_panel, BorderLayout.SOUTH);
+
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        pack();
+        setVisible(true);
+
+        button.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                System.out.println(comboBox.getSelectedItem().toString());
             }
+        });
+
+        loadInputFile();
+    }
+
+    private void loadInputFile() {
+        int[][] initial_state_from_file;
+        try {
+            List<String> allLines = Files.readAllLines(Paths.get("input.txt"));
+            for (String line : allLines) {
+                System.out.println(line);
+                initial_state_from_file = lineToInputState(line);
+                comboBox.addItem(line);
+
+//                // goal_state may be changed later using "puzzle.setGoalState" method
+//                EightPuzzle puzzle = new EightPuzzle();
+//
+//                List<EightPuzzle.EightPuzzle.Heuristic> heuristics = new ArrayList<>(){{
+//                    add(MANHATTAN_DISTANCE);
+//                    add(DIRECT_REVERSE_PENALTY);
+//                }};
+//
+//                puzzle.setHeuristics(heuristics);
+//                puzzle.solve(initial_state_from_file);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
-    public static void main(String[] args) throws FileNotFoundException {
+    static private int[][] lineToInputState(String line) {
+        int [][] arr;
+        int rows = line.charAt(1) - '0';
+        int cols = line.charAt(3) - '0';
+        arr = new int[rows][cols];
+        String[] nums = line.substring(6, line.length() - 1).split(" ");
 
-        int[][] initial_state = new int[][]{
-                {8,7,6},
-                {5,4,3},
-                {2,1,0}
-        };
-
-        int[][] goal_state = new int[][]{
-                {1,2,3},
-                {4,5,6},
-                {7,8,0}
-        };
-
-        int[][] initial_state_2 = new int[][]{
-                {5,4,3},
-                {2,1,0}
-        };
-
-        int[][] goal_state_2 = new int[][]{
-                {1,2,3},
-                {4,5,0}
-        };
-
-        // goal_state may be changed later using "puzzle.setGoalState" method
-        EightPuzzle puzzle = new EightPuzzle(goal_state_2);
-
-        int option = -1;
-        while ((option = getMenuOption(menu_main, menu_main_limit)) != 0) {
-            switch(option) {
-
-                // If uniform cost search is selected
-                case 1:
-                    // don't use any heuristics
-                    puzzle.setHeuristics(new ArrayList<>());
-
-                    // solve method is overloaded, so PrintWriter also could be supplied (instead of a file name)
-                    puzzle.solve(initial_state_2, "outputUniCost.txt");
-                    break;
-
-                // If A* is selected
-                case 2:
-                    List<Heuristic> heuristics = new ArrayList<>();
-
-                    // SELECTABLE_HEURISTICS allowed me to do some
-                    // research about different heuristic methods
-                    if (SELECTABLE_HEURISTICS) {
-                        // Get type of heuristic to use
-                        int option_h = getMenuOption(menu_astar, menu_astar_limit);
-                        // if the user selected option that combines multiple methods
-                        // then 3 conditionals below will combine all heuristics in one list
-                        if (Arrays.asList(new Integer[]{1, 4, 5, 7}).contains(option_h))
-                            heuristics.add(MANHATTAN_DISTANCE);
-                        if (Arrays.asList(new Integer[]{2, 4, 6, 7}).contains(option_h))
-                            heuristics.add(MISMATCH_COUNT);
-                        if (Arrays.asList(new Integer[]{3, 5, 6, 7}).contains(option_h))
-                            heuristics.add(DIRECT_REVERSE_PENALTY);
-                    } else {
-                        // use default (optimal)
-                        heuristics = new ArrayList<>(){{
-                            add(MANHATTAN_DISTANCE);
-                            add(DIRECT_REVERSE_PENALTY);
-                        }};
-                    }
-                    puzzle.setHeuristics(heuristics);
-                    puzzle.solve(initial_state_2, "outputAstar.txt");
-                    break;
+        int num_i = 0;
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                arr[i][j] = Integer.parseInt(nums[num_i]);
+                num_i += 1;
             }
+        }
+        return arr;
+    }
+
+    class GraphicsPanel extends JPanel {
+        GraphicsPanel() {
+            setPreferredSize(new Dimension(800, 600));
+
+            Timer update_timer = new Timer(20, new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                /* This is where action upon every frame is performed
+                  (State is an abstract class, "current()" is a static method) */
+                    //State.current().advance();
+
+                    // repaint calls "paintComponent" where "draw" of current state is called
+                    repaint();
+                }
+            });
+            update_timer.start();
+        }
+
+        @Override
+        public void paintComponent(Graphics g) {
+            super.paintComponent(g);
+            setBackground(Color.black);
+            g.setColor(Color.white);
+            int x1 = 100, x2 = 200;
+            int y1 = 100, y2= 100;
+            g.drawLine(x1, y1, x2, y2); // Draw the line
         }
     }
 }
