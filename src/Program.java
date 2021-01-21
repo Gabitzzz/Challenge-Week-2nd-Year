@@ -1,7 +1,6 @@
 import EightPuzzle.EightPuzzle;
 
 import javax.swing.*;
-import javax.swing.Timer;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -14,7 +13,6 @@ import java.util.List;
 
 import static EightPuzzle.EightPuzzle.Heuristic;
 import static EightPuzzle.EightPuzzle.Heuristic.*;
-import static java.lang.System.exit;
 
 public class Program extends JFrame {
     // https://www3.ntu.edu.sg/home/ehchua/programming/java/J4b_CustomGraphics.html
@@ -28,14 +26,42 @@ public class Program extends JFrame {
     }
 
     Program() {
+        initWindow();
+
+        EightPuzzle puzzle = new EightPuzzle();
+        List<Heuristic> heuristics = new ArrayList<>(){{
+            add(MANHATTAN_DISTANCE);
+            add(DIRECT_REVERSE_PENALTY);
+        }};
+        puzzle.setHeuristics(heuristics);
+
+        button.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                Thread thread = new Thread() {
+                    public void run(){
+                        graphics_panel.setPanelState(GraphicsPanel.PanelState.SOLVING);
+                        puzzle.solve(
+                                lineToInputState(comboBox.getSelectedItem().toString())
+                        );
+                        graphics_panel.setSolutionStates(puzzle.getSolutionStates());
+                        graphics_panel.setPanelState(GraphicsPanel.PanelState.SOLVED);
+                    }
+                };
+
+                thread.start();
+            }
+        });
+    }
+
+    private void initWindow() {
         panel = new JPanel(new FlowLayout());
         comboBox = new JComboBox();
-        button = new JButton("Start");
+        button = new JButton("Solve");
         graphics_panel = new GraphicsPanel();
 
         panel.add(comboBox);
         panel.add(button);
-
         //setContentPane(panel);
 
         // Add both panels to this JFrame's content-pane
@@ -48,13 +74,6 @@ public class Program extends JFrame {
         pack();
         setVisible(true);
 
-        button.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                System.out.println(comboBox.getSelectedItem().toString());
-            }
-        });
-
         loadInputFile();
     }
 
@@ -66,17 +85,6 @@ public class Program extends JFrame {
                 System.out.println(line);
                 initial_state_from_file = lineToInputState(line);
                 comboBox.addItem(line);
-
-//                // goal_state may be changed later using "puzzle.setGoalState" method
-//                EightPuzzle puzzle = new EightPuzzle();
-//
-//                List<EightPuzzle.EightPuzzle.Heuristic> heuristics = new ArrayList<>(){{
-//                    add(MANHATTAN_DISTANCE);
-//                    add(DIRECT_REVERSE_PENALTY);
-//                }};
-//
-//                puzzle.setHeuristics(heuristics);
-//                puzzle.solve(initial_state_from_file);
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -98,34 +106,5 @@ public class Program extends JFrame {
             }
         }
         return arr;
-    }
-
-    class GraphicsPanel extends JPanel {
-        GraphicsPanel() {
-            setPreferredSize(new Dimension(800, 600));
-
-            Timer update_timer = new Timer(20, new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                /* This is where action upon every frame is performed
-                  (State is an abstract class, "current()" is a static method) */
-                    //State.current().advance();
-
-                    // repaint calls "paintComponent" where "draw" of current state is called
-                    repaint();
-                }
-            });
-            update_timer.start();
-        }
-
-        @Override
-        public void paintComponent(Graphics g) {
-            super.paintComponent(g);
-            setBackground(Color.black);
-            g.setColor(Color.white);
-            int x1 = 100, x2 = 200;
-            int y1 = 100, y2= 100;
-            g.drawLine(x1, y1, x2, y2); // Draw the line
-        }
     }
 }

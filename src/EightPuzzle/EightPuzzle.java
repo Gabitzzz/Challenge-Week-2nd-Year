@@ -1,8 +1,5 @@
 package EightPuzzle;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.PrintWriter;
 import java.util.*;
 
 public class EightPuzzle {
@@ -18,14 +15,17 @@ public class EightPuzzle {
 
     private int nodes_expanded = 0;
 
-    public int last_solution_path_size;
-
     // This will prevent expanding previously expanded nodes,
     // without it the code could "run around in circles" indefinitely
     // It is equivalent to "visited" list from this video: https://www.youtube.com/watch?v=dRMvK76xQJI
     Set<State> visited_states = new HashSet<>();
 
+    // Result variables
+    int completion_time;
+    List<State> solution_states;
+
     public EightPuzzle() {
+        solution_states = new ArrayList<State>();
     }
 
     public void setHeuristics(List<Heuristic> heuristics_) {
@@ -40,6 +40,7 @@ public class EightPuzzle {
     }
 
     public boolean solve(int[][] initial_state_) {
+
         setGoalStateFromInitialState(initial_state_);
 
         long start_time = System.currentTimeMillis();
@@ -51,7 +52,8 @@ public class EightPuzzle {
         // "compareTo" method which determines order of nodes in the PriorityQueue. It does that by adding
         // depth of a node to heuristic value (in case of uniform cost search the heuristic value is 0)
         PriorityQueue<Node> nodes = new PriorityQueue<Node>();
-        List<String> path = new ArrayList<>();
+        //List<String> path = new ArrayList<>();
+
         visited_states.clear();
         nodes_expanded = 0;
 
@@ -75,18 +77,17 @@ public class EightPuzzle {
 
         // backtrack from the node that was found having goal state
         // all the way back to the first node (having initial state)
+        solution_states.clear();
         while (node.parent != null) {
             //path.add(0, node.state.toString());
-            path.add(0, Integer.toString(node.state.getValueThatMoved()));
+            //path.add(0, Integer.toString(node.state.getValueThatMoved()));
+            solution_states.add(0, node.state);
             node = node.parent;
         }
+        solution_states.add(0, node.state);
 
-        last_solution_path_size = path.size();
-
-        System.out.printf("Solution took %dms.\n", System.currentTimeMillis() - start_time);
-        String completion_time = String.format("%dms", System.currentTimeMillis() - start_time);
-        String number_of_moves =  String.format("%d", path.size());
-        String nodes_expanded_str =  String.format("%d", nodes_expanded);
+        completion_time = (int)(System.currentTimeMillis() - start_time);
+        System.out.printf("Solution took %dms.\n", completion_time);
 
         /*
             for (String state_str : path)
@@ -96,7 +97,7 @@ public class EightPuzzle {
             output.printf("%d Nodes expanded\n", nodes_expanded);
             output.printf("%d Nodes unexpanded\n", nodes.size());
         */
-        System.out.printf("%d Moves\n", path.size());
+        System.out.printf("%d Moves\n", solution_states.size()-1);
         System.out.printf("%d Nodes expanded\n", nodes_expanded);
         System.out.printf("%d Nodes unexpanded\n", nodes.size());
 
@@ -138,5 +139,17 @@ public class EightPuzzle {
 
         goal_state_values[initial_state_values.length - 1][initial_state_values[0].length - 1] = 0;
         goal_state = new State(goal_state_values);
+    }
+
+    public List<State> getSolutionStates() {
+        return solution_states;
+    }
+
+    public int getExpandedNodesCount() {
+        return nodes_expanded;
+    }
+
+    public long getCompletionTime() {
+        return completion_time;
     }
 }

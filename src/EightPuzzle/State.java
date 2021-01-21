@@ -1,7 +1,11 @@
 package EightPuzzle;
 
+import java.awt.*;
+import java.awt.geom.Line2D;
 import java.util.*;
+import java.util.List;
 
+import static java.lang.Integer.max;
 import static java.lang.System.exit;
 
 public class State {
@@ -252,4 +256,129 @@ public class State {
         }
         return "compiler";
     }*/
+
+    public void drawAt(Graphics g, int x, int y, int size) {
+        int separating_dist = (int)(size * 0.05);
+        int max_dimension = max(col_size,row_size);
+        int field_size = (size - separating_dist * (max_dimension-1)) / max_dimension;
+
+        // draw background
+        //g.setColor(new Color(51,153,255));
+        //g.fillRect(x,y,size,size * row_size/col_size);
+
+        g.setColor(Color.green);
+
+        int arrow_x1 = 0, arrow_x2 = 0, arrow_y1 = 0, arrow_y2 = 0;
+
+        for (int row = 0; row < row_size; row++) {
+            for (int col = 0; col < col_size; col++) {
+
+                // draw single field rect background
+                int field_y = y + row * (field_size + separating_dist);
+                int field_x = x + col * (field_size + separating_dist);
+                //g.drawRect(field_x, field_y, field_size, field_size);
+                g.setColor(Color.lightGray);
+                g.fillRect(field_x, field_y, field_size, field_size);
+
+                g.setColor(Color.black);
+
+                int field_center_y = (int) (field_y + field_size * 0.5);
+                int field_center_x = (int) (field_x + field_size * 0.5);
+
+
+                String val = Integer.toString(values[row][col]);
+                FontMetrics fm = g.getFontMetrics();
+                int half_label_width = (int)(fm.getStringBounds(val, g).getWidth()*0.5);
+                int half_label_height = (int)(fm.getStringBounds(val, g).getHeight()*0.5);
+
+                if (val.equals("0")) {
+                    // keep reference to current color
+                    Color preserved_color = g.getColor();
+
+                    g.setColor(Color.orange);
+                    g.fillRect(field_x+1, field_y+1, field_size-1, field_size-1);
+                    if (last_move != Direction.NONE) {
+                        int last_move_x = field_center_x, last_move_y = field_center_y;
+                        switch (last_move) {
+                            case UP:   last_move_y -= field_size * 0.9 + separating_dist - half_label_height; break;
+                            case DOWN: last_move_y += field_size * 0.9 + separating_dist - half_label_height; break;
+                            case RIGHT: last_move_x += field_size * 0.9 + separating_dist - half_label_width; break;
+                            case LEFT: last_move_x -= field_size * 0.9 + separating_dist - half_label_width; break;
+                        }
+                        arrow_x1 = field_center_x; arrow_x2 = last_move_x;
+                        arrow_y1 = field_center_y; arrow_y2 = last_move_y;
+
+                        //drawArrowLine(g, field_center_x, field_center_y, last_move_x, last_move_y, (int)(field_size *0.15), (int)(field_size *0.1));
+                        //g.drawLine(field_center_x, field_center_y, last_move_x, last_move_y);
+                    }
+                    // restore color
+                    g.setColor(preserved_color);
+
+                } else {
+                    g.drawString(val, field_center_x - half_label_width, field_center_y + half_label_height);
+                }
+            }
+        }
+
+        if (last_move != Direction.NONE) {
+            g.setColor(Color.black);
+            drawArrowLine(g, arrow_x1, arrow_y1, arrow_x2, arrow_y2, (int) (field_size * 0.20), (int) (field_size * 0.15));
+        }
+
+        g.setColor(Color.orange);
+
+        int boundary_width = field_size * col_size + (separating_dist * (col_size-1));
+        int boundary_height = field_size * row_size + (separating_dist * (row_size-1));
+        // draw boundary
+        g.drawRect(x,y, boundary_width, boundary_height);
+    }
+
+    /**
+     * "drawArrowLine" function was copied from: https://stackoverflow.com/a/27461352/4620679
+     * Author: phibao37; last edited by: RubenLaguna
+     *
+     * Draw an arrow line between two points.
+     * @param g the graphics component.
+     * @param x1 x-position of first point.
+     * @param y1 y-position of first point.
+     * @param x2 x-position of second point.
+     * @param y2 y-position of second point.
+     * @param d  the width of the arrow.
+     * @param h  the height of the arrow.
+     */
+    private void drawArrowLine(Graphics g, int x1, int y1, int x2, int y2, int d, int h) {
+        int dx = x2 - x1, dy = y2 - y1;
+        double D = Math.sqrt(dx*dx + dy*dy);
+        double xm = D - d, xn = xm, ym = h, yn = -h, x;
+        double sin = dy / D, cos = dx / D;
+
+        x = xm*cos - ym*sin + x1;
+        ym = xm*sin + ym*cos + y1;
+        xm = x;
+
+        x = xn*cos - yn*sin + x1;
+        yn = xn*sin + yn*cos + y1;
+        xn = x;
+
+        int[] xpoints = {x2, (int) xm, (int) xn};
+        int[] ypoints = {y2, (int) ym, (int) yn};
+
+        Graphics2D g2 = (Graphics2D)g;
+        g2.setRenderingHint
+                (RenderingHints.KEY_ANTIALIASING,
+                        RenderingHints.VALUE_ANTIALIAS_ON);
+
+        // ugly fix to hide line being visible after arrow head
+        // (due to increased stroke of the line)
+        x2 += (x1 - x2) / 10;
+        y2 += (y1 - y2) / 10;
+
+        Stroke preserved_stroke = g2.getStroke();
+        g2.setStroke(new BasicStroke(2));
+        g2.draw(new Line2D.Double(x1, y1, x2, y2));
+        g2.setStroke(preserved_stroke);
+
+        //g.drawLine(x1, y1, x2, y2);
+        g.fillPolygon(xpoints, ypoints, 3);
+    }
 }
