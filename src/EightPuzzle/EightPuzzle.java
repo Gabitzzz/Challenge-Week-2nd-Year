@@ -88,19 +88,9 @@ public class EightPuzzle {
 
         completion_time = (int)(System.currentTimeMillis() - start_time);
         System.out.printf("Solution took %dms.\n", completion_time);
-
-        /*
-            for (String state_str : path)
-                output.println(state_str);
-
-            output.printf("%d Moves\n", path.size());
-            output.printf("%d Nodes expanded\n", nodes_expanded);
-            output.printf("%d Nodes unexpanded\n", nodes.size());
-        */
         System.out.printf("%d Moves\n", solution_states.size()-1);
         System.out.printf("%d Nodes expanded\n", nodes_expanded);
         System.out.printf("%d Nodes unexpanded\n", nodes.size());
-
         return true;
     }
 
